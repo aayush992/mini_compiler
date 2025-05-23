@@ -1,0 +1,22 @@
+// Test boolean operations and string handling
+string name = "John Doe";
+bool isAdult = true;
+int age = 25;
+
+// Test boolean expressions
+bool canVote = age >= 18 && isAdult;
+bool isTeenager = age >= 13 && age <= 19;
+
+// Test complex boolean logic
+bool isEligible = (age >= 18 || isAdult) && !(isTeenager);
+
+// Test string operations
+string greeting = "Hello, ";
+string message = "Welcome!";
+
+// Test numeric operations with type checking
+float height = 5.9;
+bool isTall = height > 6.0;
+
+// Test operator precedence
+bool complexCondition = age >= 21 && height >= 5.5 || isAdult && !isTeenager; 
