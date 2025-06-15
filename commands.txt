@@ -1,0 +1,7 @@
+cd documents
+cd mini_compiler
+cd src
+win_bison.exe -d parser.y
+win_flex.exe lexer.l
+gcc -o mini_compiler main.c lex.yy.c parser.tab.c
+mini_compiler < test1.txt

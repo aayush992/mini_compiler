@@ -1,0 +1,316 @@
+lexer.l
+
+
+%{
+#include <stdio.h>
+#include "parser.tab.h"
+%}
+
+%%
+
+"int"       { return INT; }
+"float"     { return FLOAT; }
+"if"        { return IF; }
+"else"      { return ELSE; }
+"return"    { return RETURN; }
+"while"     { return WHILE; }
+"for"       { return FOR; }
+
+[0-9]+\.[0-9]+    { yylval.floatval = atof(yytext); return FLOAT_LITERAL; }
+[0-9]+            { yylval.intval = atoi(yytext); return NUMBER; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.strval = strdup(yytext); return IDENTIFIER; }
+
+[+\-*/=<>(){};]    { return yytext[0]; }
+[ \t\r\n]+         ;  // Ignore whitespace
+.                  { printf("Unknown token: %s\n", yytext); }
+
+%%
+
+int yywrap() { return 1; }
+
+
+
+
+parser.y
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char* name;
+    int int_val;
+    float float_val;
+    int is_float;
+} Symbol;
+
+typedef struct {
+    int int_val;
+    float float_val;
+    int is_float;
+    char* temp_var;
+} ExprValue;
+
+Symbol symbol_table[100];
+int sym_count = 0;
+int temp_var_count = 0;
+int label_count = 0;
+
+void yyerror(const char *s);
+int yylex(void);
+
+char* new_temp() {
+    char* temp = (char*)malloc(10);
+    sprintf(temp, "t%d", temp_var_count++);
+    return temp;
+}
+
+char* new_label() {
+    char* label = (char*)malloc(10);
+    sprintf(label, "L%d", label_count++);
+    return label;
+}
+
+Symbol* find_symbol(char* name) {
+    for(int i = 0; i < sym_count; i++) {
+        if(strcmp(symbol_table[i].name, name) == 0) {
+            return &symbol_table[i];
+        }
+    }
+    return NULL;
+}
+%}
+
+%union {
+    int intval;
+    float floatval;
+    char* strval;
+    struct {
+        int int_val;
+        float float_val;
+        int is_float;
+        char* temp_var;
+    } exprval;
+}
+
+%token <strval> IDENTIFIER
+%token <intval> NUMBER
+%token <floatval> FLOAT_LITERAL
+%token INT FLOAT IF ELSE RETURN WHILE FOR
+%token '+' '-' '*' '/' '=' '<' '>' '(' ')' '{' '}' ';'
+
+%type <exprval> expr
+%type <intval> condition
+
+%left '+' '-'
+%left '*' '/'
+%nonassoc UMINUS
+%nonassoc IFX
+%nonassoc ELSE
+
+%%
+
+program: statement_list;
+
+statement_list: statement | statement_list statement;
+
+statement:
+      declaration ';'
+    | assignment ';'
+    | if_statement
+    | while_loop
+    | for_loop
+    | return_statement ';'
+    ;
+
+declaration:
+      INT IDENTIFIER '=' expr {
+        printf("%s = %s\n", $2, $4.temp_var);
+        printf("Declared int %s = %d\n", $2, $4.int_val);
+        symbol_table[sym_count++] = (Symbol){strdup($2), $4.int_val, 0.0, 0};
+    }
+    | FLOAT IDENTIFIER '=' expr {
+        printf("%s = %s\n", $2, $4.temp_var);
+        float val = $4.is_float ? $4.float_val : (float)$4.int_val;
+        printf("Declared float %s = %.2f\n", $2, val);
+        symbol_table[sym_count++] = (Symbol){strdup($2), 0, val, 1};
+    };
+
+assignment:
+    IDENTIFIER '=' expr {
+        printf("%s = %s\n", $1, $3.temp_var);
+        printf("Assigned %s = %s\n", $1, $3.temp_var);
+    };
+
+if_statement:
+    IF '(' condition ')' '{' statement_list '}' {
+        printf("If condition true\n");
+    }
+    | IF '(' condition ')' '{' statement_list '}' ELSE '{' statement_list '}' {
+        printf("If-Else executed\n");
+    };
+
+while_loop:
+    WHILE '(' condition ')' '{' statement_list '}' {
+        printf("While loop executed\n");
+    };
+
+
+for_loop:
+    FOR '(' assignment ';' condition ';' assignment ')' '{' statement_list '}' {
+        printf("For loop executed\n");
+    };
+
+
+return_statement:
+    RETURN expr {
+        if($2.is_float)
+            printf("Return %.2f\n", $2.float_val);
+        else
+            printf("Return %d\n", $2.int_val);
+    };
+
+condition:
+      expr '>' expr { $$ = 1; printf("if %s > %s\n", $1.temp_var, $3.temp_var); }
+    | expr '<' expr { $$ = 1; printf("if %s < %s\n", $1.temp_var, $3.temp_var); }
+    | expr '=' expr { $$ = 1; printf("if %s == %s\n", $1.temp_var, $3.temp_var); }
+    ;
+
+
+expr:
+      expr '+' expr {
+        $$ = $1;
+        if ($1.is_float || $3.is_float) {
+            $$.is_float = 1;
+            $$.float_val = ($1.is_float ? $1.float_val : $1.int_val) +
+                           ($3.is_float ? $3.float_val : $3.int_val);
+        } else {
+            $$.int_val = $1.int_val + $3.int_val;
+        }
+        $$.temp_var = new_temp();
+        printf("%s = %s + %s\n", $$.temp_var, $1.temp_var, $3.temp_var);
+    }
+    | NUMBER {
+        $$.int_val = $1;
+        $$.is_float = 0;
+        $$.temp_var = new_temp();
+        printf("%s = %d\n", $$.temp_var, $1);
+    }
+    | FLOAT_LITERAL {
+        $$.float_val = $1;
+        $$.is_float = 1;
+        $$.temp_var = new_temp();
+        printf("%s = %.2f\n", $$.temp_var, $1);
+    }
+    | IDENTIFIER {
+        Symbol* s = find_symbol($1);
+        $$.int_val = s ? s->int_val : 0;
+        $$.float_val = s ? s->float_val : 0.0;
+        $$.is_float = s ? s->is_float : 0;
+        $$.temp_var = strdup($1);
+    }
+;
+
+%%
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
+
+
+main.c
+
+#include <stdio.h>
+
+extern int yyparse();
+
+int main() {
+    printf("Mini Compiler - Enter your code (Ctrl+Z to end):\n");
+    return yyparse();
+}
+
+
+input.txt
+int a = 5;
+float b = 2.5;
+a = a + 1;
+b = b + 1.5;
+
+if (a > b) {
+    a = a + 1;
+} else {
+    b = b + 1.0;
+}
+
+while (a < 10) {
+    a = a + 1;
+}
+
+for (a = 0; a < 5; a = a + 1) {
+    b = b + 0.5;
+}
+
+return a;
+
+
+
+output.txt
+
+D:\mini_compiler\src>win_bison -d parser.y
+
+D:\mini_compiler\src>win_flex lexer.l
+
+D:\mini_compiler\src>gcc -o compiler main.c lex.yy.c parser.tab.c
+
+D:\mini_compiler\src>compiler < input.txt
+Mini Compiler - Enter your code (Ctrl+Z to end):
+t0 = 5
+a = t0
+Declared int a = 5
+t1 = 2.50
+b = t1
+Declared float b = 2.50
+t2 = 1
+t3 = a + t2
+a = t3
+Assigned a = t3
+t4 = 1.50
+t5 = b + t4
+b = t5
+Assigned b = t5
+if a > b
+t6 = 1
+t7 = a + t6
+a = t7
+Assigned a = t7
+t8 = 1.00
+t9 = b + t8
+b = t9
+Assigned b = t9
+If-Else executed
+t10 = 10
+if a < t10
+t11 = 1
+t12 = a + t11
+a = t12
+Assigned a = t12
+While loop executed
+t13 = 0
+a = t13
+Assigned a = t13
+t14 = 5
+if a < t14
+t15 = 1
+t16 = a + t15
+a = t16
+Assigned a = t16
+t17 = 0.50
+t18 = b + t17
+b = t18
+Assigned b = t18
+For loop executed
+Return 5
+
+D:\mini_compiler\src>
+
