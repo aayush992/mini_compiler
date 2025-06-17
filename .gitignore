@@ -34,4 +34,33 @@ var/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+Thumbs.db
+
+# Generated files
+*.exe
+*.o
+*.obj
+*.out
+lex.yy.c
+parser.tab.c
+parser.tab.h
+
+# Backup files
+*.backup
+*~
+
+# Log files
+*.log
+
+# Test output
+*.asm
+*.s
+*.o
+
+# Temporary files
+*.tmp
+*.temp
+
+# System files
+.DS_Store
 Thumbs.db 
