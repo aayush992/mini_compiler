@@ -1,0 +1,21 @@
+int arr[5];
+arr[0] = 10;
+arr[1] = 20;
+arr[2] = 30;
+arr[3] = 40;
+arr[4] = 50;
+
+int sum = 0;
+sum = sum + arr[0];
+sum = sum + arr[1];
+sum = sum + arr[2];
+sum = sum + arr[3];
+sum = sum + arr[4];
+
+if (arr[0] < arr[1]) {
+    print arr[2];
+} else {
+    print arr[3];
+}
+
+print sum; 

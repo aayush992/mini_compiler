@@ -1,26 +1,28 @@
-<<<<<<< HEAD
-# mini_compiler
-=======
-# CustomLang Mini Compiler
+# Mini Compiler
 
-A simplified compiler implementation for the CustomLang programming language, featuring lexical analysis, parsing, and x86 assembly code generation.
+A simplified compiler implementation featuring lexical analysis, parsing, and x86 assembly code generation.
 
 ## Language Features
 
 ### Data Types
 - `int`: Integer values
+- `float`: Floating-point values
 - `bool`: Boolean values (true/false)
 - `string`: Text strings with escape sequences
 - `void`: Used for functions with no return value
+- Arrays of all basic types
 
 ### Operators
-- Arithmetic: `+`, `-`, `*`, `/`
+- Arithmetic: `+`, `-`, `*`, `/`, `%`
 - Logical: `&&`, `||`, `!`
 - Comparison: `==`, `!=`, `<`, `>`, `<=`, `>=`
 - Assignment: `=`
+- Array indexing: `[]`
 
 ### Control Flow
 - If-else statements
+- While loops
+- For loops
 - Basic blocks
 - Function calls
 
@@ -33,7 +35,17 @@ mini_compiler/
 │   ├── parser.y         # Bison parser
 │   ├── ir.h/c          # Intermediate representation
 │   ├── codegen.h/c     # x86 code generation
-│   └── test_cases.c    # Test suite
+│   ├── main.c          # Main compiler driver
+│   └── Makefile        # Build configuration
+├── tests/
+│   ├── arithmetic_test.txt
+│   ├── array_ops.txt
+│   ├── basic_arithmetic.txt
+│   ├── control_flow.txt
+│   ├── error_handling.txt
+│   ├── functions.txt
+│   ├── logical_ops_new.txt
+│   └── type_checking.txt
 └── docs/
     ├── language.md     # Language specification
     └── compiler.md     # Compiler architecture
@@ -62,20 +74,24 @@ make
 
 ### Basic Compilation
 ```bash
-./compiler input.cl -o output
+./mini_compiler input.txt -o output
 ```
 
 ### Example Program
 ```c
-// Sample CustomLang program
+// Sample program
 int main() {
     int x = 42;
-    int y = 10;
+    float y = 10.5;
+    int arr[5];
+    
+    arr[0] = x;
+    arr[1] = y;
     
     if (x > y) {
-        return x + y;
+        return arr[0] + arr[1];
     } else {
-        return x - y;
+        return arr[0] - arr[1];
     }
 }
 ```
@@ -87,6 +103,7 @@ The compiler uses a three-address code IR with the following components:
 ### IR Operations
 - Assignment: `dest = src`
 - Arithmetic: `dest = src1 op src2`
+- Array Operations: `dest = array[index]`
 - Control Flow: `if cond goto label`
 - Function: `call func(args)`
 
@@ -106,18 +123,21 @@ The compiler uses a three-address code IR with the following components:
 - Function prologue/epilogue
 - Local variable storage
 - Parameter passing
+- Array storage
 
 ## Testing
 
 The compiler includes a comprehensive test suite covering:
 - Arithmetic operations
+- Array operations
 - Boolean logic
 - Control flow
 - Error handling
+- Type checking
 
 Run tests with:
 ```bash
-./test_cases
+./mini_compiler < tests/test_name.txt
 ```
 
 ## Known Limitations
@@ -125,20 +145,19 @@ Run tests with:
 1. Limited optimization support
 2. Basic register allocation
 3. No support for:
-   - Loops
-   - Arrays
    - Structs
    - Global variables
+   - Multiple source files
 
 ## Future Improvements
 
 1. Enhanced optimization passes
 2. Better register allocation
 3. Support for additional language features:
-   - For/while loops
-   - Array operations
    - Structure types
    - Global scope
+   - Multiple source files
+   - Standard library
 
 ## Contributing
 
@@ -148,5 +167,4 @@ Run tests with:
 
 ## License
 
-This project is licensed under the MIT License - see LICENSE file for details. 
->>>>>>> eeb5d1e (Initial commit)
+This project is licensed under the MIT License - see LICENSE file for details.

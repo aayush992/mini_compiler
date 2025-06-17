@@ -1,0 +1,24 @@
+int a = 10;
+int b = 5;
+int c = a + b;
+int d = a - b;
+int e = a * b;
+int f = a / b;
+int g = a % b;
+
+float x = 10.5;
+float y = 2.5;
+float z = x + y;
+float w = x - y;
+float v = x * y;
+float u = x / y;
+
+print c;  // Should print 15
+print d;  // Should print 5
+print e;  // Should print 50
+print f;  // Should print 2
+print g;  // Should print 0
+print z;  // Should print 13.0
+print w;  // Should print 8.0
+print v;  // Should print 26.25
+print u;  // Should print 4.2 

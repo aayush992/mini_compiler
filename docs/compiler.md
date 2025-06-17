@@ -1,8 +1,8 @@
-# CustomLang Compiler Architecture
+# Compiler Architecture
 
 ## 1. Overview
 
-The CustomLang compiler is a multi-pass compiler that translates CustomLang source code into x86 assembly. It follows a traditional compiler pipeline:
+The compiler is a multi-pass compiler that translates source code into x86 assembly. It follows a traditional compiler pipeline:
 
 1. Lexical Analysis (Flex)
 2. Parsing (Bison)
@@ -20,16 +20,19 @@ The CustomLang compiler is a multi-pass compiler that translates CustomLang sour
 ### 2.2 Token Categories
 ```c
 // Keywords
-IF, ELSE, RETURN, TRUE, FALSE, INT, BOOL, STRING, VOID, FUNCTION
+IF, ELSE, RETURN, TRUE, FALSE
+INT, FLOAT, BOOL, STRING, VOID
+WHILE, FOR, PRINT, INPUT
 
 // Operators
-PLUS, MINUS, MULTIPLY, DIVIDE
+PLUS, MINUS, MULTIPLY, DIVIDE, MODULO
 AND, OR, NOT
 EQ, NEQ, LT, GT, LEQ, GEQ
-ASSIGN
+ASSIGN, LBRACKET, RBRACKET
 
 // Literals
 INTEGER_LITERAL
+FLOAT_LITERAL
 BOOLEAN_LITERAL
 STRING_LITERAL
 
@@ -48,42 +51,69 @@ COMMA            // ,
 ### 3.1 Implementation (parser.y)
 - Uses Bison parser generator
 - Builds Abstract Syntax Tree (AST)
-- Performs basic type checking
+- Performs type checking
 - Manages symbol table
+- Handles array operations
 
 ### 3.2 Grammar Rules
 ```yacc
-program     : function_list
-function    : type IDENTIFIER LPAREN param_list RPAREN compound_stmt
-stmt        : if_stmt | return_stmt | expr_stmt | compound_stmt
-if_stmt     : IF LPAREN expr RPAREN stmt ELSE stmt
-expr        : binary_expr | unary_expr | literal | IDENTIFIER
+program     : statement_list
+statement   : declaration | assignment | array_assignment
+            | if_statement | while_loop | for_loop
+            | print_statement | input_statement
+declaration : type IDENTIFIER | type IDENTIFIER '[' NUMBER ']'
+assignment  : IDENTIFIER '=' expr | array_access '=' expr
+expr        : binary_expr | unary_expr | literal | array_access
 ```
 
 ### 3.3 Symbol Table
 - Tracks variable declarations and types
 - Manages scope information
 - Validates variable usage
+- Handles array types and sizes
 
 ## 4. Intermediate Representation
 
-### 4.1 Three-Address Code IR (ir.h/c)
+### 4.1 Three-Address Code IR (ir.h)
 ```c
 typedef enum {
-    IR_ASSIGN, IR_ADD, IR_SUB, IR_MUL, IR_DIV,
-    IR_AND, IR_OR, IR_NOT,
-    IR_EQ, IR_NEQ, IR_LT, IR_GT, IR_LEQ, IR_GEQ,
-    IR_LABEL, IR_JUMP, IR_CJUMP,
-    IR_PARAM, IR_CALL, IR_RETURN
-} IROpType;
+    IR_TEMP,
+    IR_VAR,
+    IR_CONST,
+    IR_LABEL
+} IROperandType;
+
+typedef struct {
+    IROperandType type;
+    union {
+        int temp_num;
+        char* var_name;
+        int const_val;
+        char* label_name;
+    } value;
+} IROperand;
+
+typedef enum {
+    IR_ASSIGN,
+    IR_ADD,
+    IR_SUB,
+    IR_MUL,
+    IR_DIV,
+    IR_MOD,
+    IR_JUMP,
+    IR_COND_JUMP,
+    IR_CALL,
+    IR_RETURN,
+    IR_ARRAY_ACCESS,
+    IR_ARRAY_ASSIGN
+} IRInstructionType;
 ```
 
 ### 4.2 Basic Block Structure
 ```c
 typedef struct BasicBlock {
     char* label;
-    IRInst* first_inst;
-    IRInst* last_inst;
+    IRInstruction* instructions;
     struct BasicBlock* next;
 } BasicBlock;
 ```
@@ -92,7 +122,7 @@ typedef struct BasicBlock {
 ```c
 typedef struct IRFunction {
     char* name;
-    BasicBlock* entry_block;
+    BasicBlock* blocks;
     struct IRFunction* next;
 } IRFunction;
 ```
@@ -104,6 +134,7 @@ typedef struct IRFunction {
 - Manages register allocation
 - Handles stack frame layout
 - Implements calling convention
+- Supports array operations
 
 ### 5.2 Register Allocation
 ```c
@@ -123,6 +154,8 @@ High addresses
 +----------------+
 | Local vars     |
 +----------------+
+| Array storage  |
++----------------+
 | Temp values    |
 +----------------+
 | Saved regs     |
@@ -132,8 +165,9 @@ Low addresses
 
 ### 5.4 Instruction Selection
 - Maps IR operations to x86 instructions
-- Optimizes common patterns
-- Handles memory operands
+- Handles array access and assignment
+- Manages control flow
+- Implements function calls
 
 ## 6. Error Handling
 
@@ -142,71 +176,65 @@ Low addresses
 2. Syntax errors
 3. Type errors
 4. Scope errors
-5. Code generation errors
+5. Array errors
+6. Code generation errors
 
 ### 6.2 Error Recovery
 - Synchronization points in parser
 - Error message generation
 - Source location tracking
+- Array bounds checking
 
-## 7. Optimization
+## 7. Testing
 
-### 7.1 Current Optimizations
-- Constant folding
-- Dead code elimination
-- Basic block optimization
-
-### 7.2 Planned Optimizations
-- Common subexpression elimination
-- Loop optimization
-- Strength reduction
-
-## 8. Testing
-
-### 8.1 Test Components
+### 7.1 Test Components
 - Lexer tests
 - Parser tests
 - IR generation tests
 - Code generation tests
+- Array operation tests
 
-### 8.2 Test Infrastructure
+### 7.2 Test Infrastructure
 ```c
 // Test case structure
-void create_arithmetic_test(BasicBlock* block);
-void create_boolean_test(BasicBlock* block);
-void create_comparison_test(BasicBlock* block);
-void create_control_flow_test(IRFunction* func);
+void test_arithmetic();
+void test_arrays();
+void test_control_flow();
+void test_functions();
+void test_error_handling();
 ```
 
-## 9. Build System
+## 8. Build System
 
-### 9.1 Dependencies
+### 8.1 Dependencies
 - GCC compiler
 - Flex lexical analyzer
 - Bison parser generator
 - NASM assembler
 
-### 9.2 Build Process
+### 8.2 Build Process
 1. Generate lexer (flex)
 2. Generate parser (bison)
 3. Compile C source files
 4. Link object files
 5. Run tests
 
-## 10. Future Enhancements
+## 9. Future Enhancements
 
 1. Optimization passes:
    - Dataflow analysis
    - Register allocation graphs
    - Peephole optimization
+   - Array access optimization
 
 2. Language features:
-   - Loop constructs
-   - Array support
    - Structure types
    - Global variables
+   - Multiple source files
+   - Dynamic arrays
 
 3. Development tools:
    - Debugger support
    - Profile-guided optimization
-   - Source-level error messages 
+   - Source-level error messages
+   - Array bounds checking 

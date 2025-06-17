@@ -1,0 +1,23 @@
+// Integer declarations and assignments
+int a = 10;
+int b = 20;
+
+print a;
+print b;
+
+a = b;
+print a;
+
+int c = a + b;
+print c;
+
+int d = c - a;
+print d;
+
+int e = b * a;
+print e;
+
+int f = c / b;
+print f;
+
+return 0; 

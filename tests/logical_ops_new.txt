@@ -1,0 +1,33 @@
+int x = 5;
+int y = 10;
+int z = 15;
+
+// Simple if-else with <
+if (x < y) {
+    print x;
+} else {
+    print y;
+}
+
+// if-else with >
+if (z > y) {
+    print z;
+} else {
+    print y;
+}
+
+// if-else with ==
+if (x == 5) {
+    print x;
+} else {
+    print y;
+}
+
+// if-else with !=
+if (y != z) {
+    print y;
+} else {
+    print z;
+}
+
+return 0;

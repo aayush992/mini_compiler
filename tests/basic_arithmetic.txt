@@ -1,0 +1,24 @@
+int a = 10;
+int b = 20;
+int c = 30;
+
+print a;
+print b;
+print c;
+
+int sum = a + b + c;
+print sum;
+
+int diff = c - b - a;
+print diff;
+
+int prod = a * b;
+print prod;
+
+int div = c / a;
+print div;
+
+int mod = c % a;
+print mod;
+
+Return 0; 

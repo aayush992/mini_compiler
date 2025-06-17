@@ -1,0 +1,29 @@
+int x = 10;
+int y = 20;
+
+print x;
+print y;
+
+int arr[5];
+arr[0] = 10;
+arr[1] = 20;
+arr[2] = 30;
+arr[3] = 40;
+arr[4] = 50;
+
+int val1 = arr[0];
+int val2 = arr[1];
+int val3 = arr[2];
+int val4 = arr[3];
+int val5 = arr[4];
+
+print val1;
+print val2;
+print val3;
+print val4;
+print val5;
+
+int sum = val1 + val2 + val3 + val4 + val5;
+print sum;
+
+return 0; 

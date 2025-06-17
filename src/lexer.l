@@ -27,6 +27,8 @@ int line_number = 1;
 "void"      { return VOID; }
 "while"     { return WHILE; }
 "for"       { return FOR; }
+"print"     { return PRINT; }
+"input"     { return INPUT; }
 "true"      { yylval.intval = 1; return BOOL_LITERAL; }
 "false"     { yylval.intval = 0; return BOOL_LITERAL; }
 
@@ -34,6 +36,7 @@ int line_number = 1;
 "-"         { return '-'; }
 "*"         { return '*'; }
 "/"         { return '/'; }
+"%"         { return '%'; }
 "&&"        { return AND; }
 "||"        { return OR; }
 "!"         { return NOT; }
@@ -44,7 +47,8 @@ int line_number = 1;
 "<="        { return LEQ; }
 ">="        { return GEQ; }
 "="         { return '='; }
-
+"["         { return '['; }
+"]"         { return ']'; }
 "("         { return '('; }
 ")"         { return ')'; }
 "{"         { return '{'; }
